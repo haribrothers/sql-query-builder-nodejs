@@ -137,14 +137,62 @@ class ConditionGroup {
     header.className = 'group-header';
 
     const logicalToggle = document.createElement('div');
-    logicalToggle.className = 'logical-toggle and';
-    logicalToggle.textContent = 'AND';
-    logicalToggle.onclick = () => {
-      this.logicalOperator = this.logicalOperator === 'AND' ? 'OR' : 'AND';
-      logicalToggle.className = `logical-toggle ${this.logicalOperator.toLowerCase()}`;
-      logicalToggle.textContent = this.logicalOperator;
+    logicalToggle.className = 'segment-control';
+
+    const andInput = document.createElement('input');
+    andInput.type = 'radio';
+    andInput.id = `and_${Math.random().toString(36).substring(2, 9)}`; // Unique ID
+    andInput.name = `operator_${andInput.id}`;
+    andInput.value = 'AND';
+    andInput.checked = this.logicalOperator === 'AND';
+    const andLabel = document.createElement('label');
+    andLabel.htmlFor = andInput.id;
+    andLabel.textContent = 'AND';
+    const orInput = document.createElement('input');
+    orInput.type = 'radio';
+    orInput.id = `or_${Math.random().toString(36).substr(2, 9)}`; // Unique ID
+    orInput.name = `operator_${andInput.id}`;
+    orInput.value = 'OR';
+    orInput.checked = this.logicalOperator === 'OR';
+    
+    const orLabel = document.createElement('label');
+    orLabel.htmlFor = orInput.id;
+    orLabel.textContent = 'OR';
+
+    logicalToggle.onchange = (e) => {
+      this.logicalOperator = e.target.value;
       updatePreview();
-    };
+    }
+
+    logicalToggle.appendChild(andInput);
+    logicalToggle.appendChild(andLabel);
+    logicalToggle.appendChild(orInput);
+    logicalToggle.appendChild(orLabel);
+    
+    // const logicalToggle = document.createElement('label');
+    // logicalToggle.className = 'toggle-switch';
+    // const toggleInput = document.createElement('input');
+    // toggleInput.type = 'checkbox';
+    // toggleInput.checked = this.logicalOperator === 'OR';
+    // toggleInput.onchange = (e) => {
+    //   this.logicalOperator = e.target.checked ? 'OR' : 'AND';
+    //   updatePreview();
+    // }
+    // const sliderSpan = document.createElement('span');
+    // sliderSpan.className = 'slider';
+
+    // logicalToggle.appendChild(toggleInput);
+    // logicalToggle.appendChild(sliderSpan);
+
+    // const logicalToggle = document.createElement('div');
+    // logicalToggle.className = 'logical-toggle and';
+    // logicalToggle.textContent = 'AND';
+    // logicalToggle.onclick = () => {
+    //   this.logicalOperator = this.logicalOperator === 'AND' ? 'OR' : 'AND';
+    //   logicalToggle.className = `logical-toggle ${this.logicalOperator.toLowerCase()}`;
+    //   logicalToggle.textContent = this.logicalOperator;
+    //   updatePreview();
+    // };
 
     const actions = document.createElement('div');
     actions.className = 'group-actions';
@@ -162,7 +210,7 @@ class ConditionGroup {
     actions.appendChild(addGroupBtn);
 
     if (this.isNested) {
-      const removeBtn = this.createIconButton('fa-trash', 'remove-btn', () =>
+      const removeBtn = this.createIconButton('fa-close', 'remove-btn', () =>
         this.remove()
       );
       actions.appendChild(removeBtn);
@@ -284,9 +332,6 @@ class Condition {
 
     const valueContainer = document.createElement('div');
     valueContainer.className = 'value-container';
-    valueContainer.style.display = 'flex';
-    valueContainer.style.gap = '10px';
-    valueContainer.style.flex = '1';
 
     this.valueContainer = valueContainer;
     this.controls = { columnSelect, operatorSelect };
@@ -313,7 +358,7 @@ class Condition {
     );
     addGroupBtn.title = 'Add Nested Group';
 
-    const removeBtn = this.createIconButton('fa-trash', 'remove-btn', () =>
+    const removeBtn = this.createIconButton('fa-close', 'remove-btn', () =>
       this.remove()
     );
     removeBtn.title = 'Remove';
