@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced SQL Condition Builder</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .condition-group {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 4px;
+        background: #f9f9f9;
+      }
+      .nested-group {
+        border-left: 3px solid #2196f3;
+        margin-left: 20px;
+        padding-left: 20px;
+      }
+      .form-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+        position: relative;
+      }
+      select,
+      input {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .icon-button {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: white;
+      }
+      .add-btn {
+        background: #4caf50;
+      }
+      .remove-btn {
+        background: #f44336;
+      }
+      .group-btn {
+        background: #2196f3;
+      }
+
+      .logical-toggle {
+        padding: 5px 10px;
+        background: #e3e3e3;
+        border-radius: 4px;
+        cursor: pointer;
+        user-select: none;
+        display: inline-block;
+        margin: 5px 0;
+      }
+      .logical-toggle.and {
+        background: #4caf50;
+        color: white;
+      }
+      .logical-toggle.or {
+        background: #ff9800;
+        color: white;
+      }
+      .group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .group-actions {
+        display: flex;
+        gap: 5px;
+      }
+      #result,
+      #preview {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+      }
+      .row-actions {
+        display: flex;
+        gap: 5px;
+      }
+      .preview-section {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+      .preview-header {
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #2196f3;
+      }
+
+      .fields-selector {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .fields-header {
+        font-weight: bold;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .fields-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .field-item {
+        background: white;
+        padding: 5px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .field-item input[type='checkbox'] {
+        margin: 0;
+      }
+      .row-actions {
+        display: flex;
+        gap: 5px;
+      }
+      .action-group {
+        display: flex;
+        gap: 5px;
+        padding: 5px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>SQL Condition Builder</h2>
+
+      <div class="fields-selector">
+        <div class="fields-header">
+          <span>Select Table</span>
+        </div>
+        <div class="table-field" id="tableField"></div>
+      </div>
+
+      <div class="fields-selector">
+        <div class="fields-header">
+          <span>Select Fields to Display</span>
+          <div class="row-actions">
+            <button
+              onclick="selectAllFields(true)"
+              class="icon-button add-btn"
+              title="Select All"
+            >
+              <i class="fas fa-check-double"></i>
+            </button>
+            <button
+              onclick="selectAllFields(false)"
+              class="icon-button remove-btn"
+              title="Deselect All"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="fields-list" id="fieldsList">
+          <!-- Fields will be added here dynamically -->
+        </div>
+      </div>
+
+      <div id="mainGroup" class="condition-group"></div>
+      <div class="preview-section">
+        <div class="preview-header">SQL Preview</div>
+        <div id="preview"></div>
+      </div>
+      <button
+        onclick="validateConditions()"
+        class="icon-button group-btn"
+        style="width: 100%; margin-top: 20px"
+      >
+        <i class="fas fa-check"></i> Validate SQL
+      </button>
+      <div id="result"></div>
+    </div>
+
+    <script>
+      const columns = ['InqID', 'user', 'flagcds', 'winloss', 'statuscd'];
+      const operators = [
+        { value: '=', label: '=' },
+        { value: '<>', label: '≠' },
+        { value: '>', label: '>' },
+        { value: '<', label: '<' },
+        { value: '>=', label: '≥' },
+        { value: '<=', label: '≤' },
+        { value: 'LIKE', label: 'LIKE' },
+      ];
+
+      function updatePreview() {
+        const selectedFields = Array.from(
+          document.querySelectorAll(
+            '.field-item input[type="checkbox"]:checked'
+          )
+        ).map((checkbox) => checkbox.value);
+
+        const whereClause = mainGroup.toSQL();
+        const sql = `SELECT ${selectedFields.join(
+          ', '
+        )} \nFROM table_name \nWHERE ${whereClause}`;
+
+        document.getElementById('preview').textContent = sql;
+      }
+
+      const availableFields = [
+        'InqID',
+        'user',
+        'flagcds',
+        'winloss',
+        'statuscd',
+        'created_at',
+        'updated_at',
+        'status',
+        'description',
+      ];
+
+      const tableNames = [
+        { label: 'Inquiry', value: 'inquiry' },
+        { label: 'Users', value: 'users' },
+        { label: 'Status', value: 'status' },
+      ];
+
+      function initializeTableSelector() {
+        const tableField = document.getElementById('tableField');
+        const tableSelect = document.createElement('select');
+        tableNames.forEach((op) => {
+          const option = document.createElement('option');
+          option.value = op.value;
+          option.textContent = op.label;
+          tableSelect.appendChild(option);
+        });
+        tableSelect.id = 'tableSelect';
+        tableSelect.onchange = updatePreview;
+        tableField.appendChild(tableSelect);
+      }
+
+      function initializeFieldsSelector() {
+        const fieldsList = document.getElementById('fieldsList');
+        availableFields.forEach((field) => {
+          const fieldItem = document.createElement('div');
+          fieldItem.className = 'field-item';
+
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.id = `field_${field}`;
+          checkbox.value = field;
+          checkbox.checked = true;
+          checkbox.onchange = updatePreview;
+
+          const label = document.createElement('label');
+          label.htmlFor = `field_${field}`;
+          label.textContent = field;
+
+          fieldItem.appendChild(checkbox);
+          fieldItem.appendChild(label);
+          fieldsList.appendChild(fieldItem);
+        });
+      }
+
+      function selectAllFields(selected) {
+        document
+          .querySelectorAll('.field-item input[type="checkbox"]')
+          .forEach((checkbox) => (checkbox.checked = selected));
+        updatePreview();
+      }
+
+      class ConditionGroup {
+        constructor(parent = null, isNested = false) {
+          this.element = document.createElement('div');
+          this.element.className = `condition-group ${
+            isNested ? 'nested-group' : ''
+          }`;
+          this.conditions = [];
+          this.parent = parent;
+          this.isNested = isNested;
+          this.logicalOperator = 'AND';
+          this.init();
+        }
+
+        init() {
+          const header = document.createElement('div');
+          header.className = 'group-header';
+
+          const logicalToggle = document.createElement('div');
+          logicalToggle.className = 'logical-toggle and';
+          logicalToggle.textContent = 'AND';
+          logicalToggle.onclick = () => {
+            this.logicalOperator =
+              this.logicalOperator === 'AND' ? 'OR' : 'AND';
+            logicalToggle.className = `logical-toggle ${this.logicalOperator.toLowerCase()}`;
+            logicalToggle.textContent = this.logicalOperator;
+            updatePreview();
+          };
+
+          const actions = document.createElement('div');
+          actions.className = 'group-actions';
+
+          const addConditionBtn = this.createIconButton(
+            'fa-plus',
+            'add-btn',
+            () => this.addCondition()
+          );
+          const addGroupBtn = this.createIconButton(
+            'fa-folder-plus',
+            'group-btn',
+            () => this.addNestedGroup()
+          );
+
+          actions.appendChild(addConditionBtn);
+          actions.appendChild(addGroupBtn);
+
+          if (this.isNested) {
+            const removeBtn = this.createIconButton(
+              'fa-trash',
+              'remove-btn',
+              () => this.remove()
+            );
+            actions.appendChild(removeBtn);
+          }
+
+          header.appendChild(logicalToggle);
+          header.appendChild(actions);
+          this.element.appendChild(header);
+        }
+
+        createIconButton(iconClass, buttonClass, onClick) {
+          const button = document.createElement('button');
+          button.className = `icon-button ${buttonClass}`;
+          button.innerHTML = `<i class="fas ${iconClass}"></i>`;
+          button.onclick = onClick;
+          return button;
+        }
+
+        addCondition(afterCondition = null) {
+          const condition = new Condition(this);
+          if (afterCondition) {
+            const index = this.conditions.indexOf(afterCondition);
+            this.conditions.splice(index + 1, 0, condition);
+            afterCondition.element.after(condition.element);
+          } else {
+            this.conditions.push(condition);
+            this.element.appendChild(condition.element);
+          }
+          updatePreview();
+        }
+
+        addNestedGroup() {
+          const group = new ConditionGroup(this, true);
+          this.conditions.push(group);
+          this.element.appendChild(group.element);
+          group.addCondition();
+          updatePreview();
+        }
+
+        remove() {
+          if (this.parent) {
+            const index = this.parent.conditions.indexOf(this);
+            if (index > -1) {
+              this.parent.conditions.splice(index, 1);
+            }
+            this.element.remove();
+            updatePreview();
+          }
+        }
+
+        toSQL() {
+          if (this.conditions.length === 0) return '';
+
+          const parts = this.conditions
+            .map((c) => c.toSQL())
+            .filter((sql) => sql);
+          if (parts.length === 0) return '';
+
+          let sql = parts.join(` ${this.logicalOperator} `);
+          if (this.isNested && parts.length > 1) {
+            sql = `(${sql})`;
+          }
+          return sql;
+        }
+
+        toJSON() {
+          if (this.conditions.length === 0) return null;
+
+          const conditions = this.conditions
+            .map((c) => (c instanceof Condition ? c.toJSON() : c.toJSON()))
+            .filter((c) => c != null);
+
+          if (conditions.length === 0) return null;
+
+          return {
+            operator: this.logicalOperator,
+            conditions: conditions,
+            isNested: this.isNested,
+          };
+        }
+      }
+
+      class Condition {
+        constructor(group) {
+          this.group = group;
+          this.element = document.createElement('div');
+          this.element.className = 'form-row';
+          this.init();
+        }
+
+        init() {
+          const columnSelect = document.createElement('select');
+          columns.forEach((col) => {
+            const option = document.createElement('option');
+            option.value = col;
+            option.textContent = col;
+            columnSelect.appendChild(option);
+          });
+
+          const operatorSelect = document.createElement('select');
+          operators.forEach((op) => {
+            const option = document.createElement('option');
+            option.value = op.value;
+            option.textContent = op.label;
+            operatorSelect.appendChild(option);
+          });
+
+          const valueInput = document.createElement('input');
+          valueInput.type = 'text';
+          valueInput.placeholder = 'Value';
+
+          this.controls = { columnSelect, operatorSelect, valueInput };
+
+          const actionGroup = document.createElement('div');
+          actionGroup.className = 'action-group';
+
+          const addConditionBtn = this.createIconButton(
+            'fa-plus',
+            'add-btn',
+            () => this.group.addCondition(this)
+          );
+          addConditionBtn.title = 'Add Condition';
+
+          const addGroupBtn = this.createIconButton(
+            'fa-folder-plus',
+            'group-btn',
+            () => this.addNestedGroupAfter()
+          );
+          addGroupBtn.title = 'Add Nested Group';
+
+          const removeBtn = this.createIconButton(
+            'fa-trash',
+            'remove-btn',
+            () => this.remove()
+          );
+          removeBtn.title = 'Remove';
+
+          actionGroup.appendChild(addConditionBtn);
+          actionGroup.appendChild(addGroupBtn);
+          actionGroup.appendChild(removeBtn);
+
+          [columnSelect, operatorSelect, valueInput].forEach((control) => {
+            control.onchange = () => updatePreview();
+            control.onkeyup = () => updatePreview();
+          });
+
+          this.element.appendChild(columnSelect);
+          this.element.appendChild(operatorSelect);
+          this.element.appendChild(valueInput);
+          this.element.appendChild(actionGroup);
+        }
+
+        addNestedGroupAfter() {
+          const group = new ConditionGroup(this.group, true);
+          const index = this.group.conditions.indexOf(this);
+          this.group.conditions.splice(index + 1, 0, group);
+          this.element.after(group.element);
+          group.addCondition();
+          updatePreview();
+        }
+
+        createIconButton(iconClass, buttonClass, onClick) {
+          const button = document.createElement('button');
+          button.className = `icon-button ${buttonClass}`;
+          button.innerHTML = `<i class="fas ${iconClass}"></i>`;
+          button.onclick = onClick;
+          return button;
+        }
+
+        remove() {
+          const index = this.group.conditions.indexOf(this);
+          if (index > -1) {
+            this.group.conditions.splice(index, 1);
+          }
+          this.element.remove();
+          updatePreview();
+        }
+
+        toSQL() {
+          const { columnSelect, operatorSelect, valueInput } = this.controls;
+          const value = valueInput.value.trim();
+          if (!value) return '';
+
+          let formattedValue = value;
+          if (operatorSelect.value === 'LIKE') {
+            formattedValue = `'%${value}%'`;
+          } else if (isNaN(value)) {
+            formattedValue = `'${value}'`;
+          }
+
+          return `${columnSelect.value} ${operatorSelect.value} ${formattedValue}`;
+        }
+
+        toJSON() {
+          const { columnSelect, operatorSelect, valueInput } = this.controls;
+          const value = valueInput.value.trim();
+          if (!value) return null;
+
+          return {
+            column: columnSelect.value,
+            operator: operatorSelect.value,
+            value: value,
+            formattedValue: this.formatValue(value, operatorSelect.value),
+          };
+        }
+
+        formatValue(value, operator) {
+          if (operator === 'LIKE') {
+            return `%${value}%`;
+          }
+          return isNaN(value) ? value : Number(value);
+        }
+      }
+
+      // Initialize main group
+      initializeTableSelector();
+      initializeFieldsSelector();
+      const mainGroup = new ConditionGroup();
+      document.getElementById('mainGroup').appendChild(mainGroup.element);
+      mainGroup.addCondition();
+
+      async function validateConditions() {
+        const tableSelect = document.getElementById('tableSelect');
+        const selectedFields = Array.from(
+          document.querySelectorAll(
+            '.field-item input[type="checkbox"]:checked'
+          )
+        ).map((checkbox) => checkbox.value);
+
+        const payload = {
+          tableName: tableSelect.value,
+          fields: selectedFields,
+          conditions: mainGroup.toJSON(),
+        };
+
+        try {
+          const response = await fetch('/api/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+          const resultDiv = document.getElementById('result');
+
+          resultDiv.className = result.isValid ? 'valid' : 'invalid';
+          resultDiv.textContent = result.isValid
+            ? `Valid SQL Query:\n${result.query}`
+            : `Invalid SQL: ${result.error}`;
+        } catch (error) {
+          document.getElementById('result').className = 'invalid';
+          document.getElementById('result').textContent =
+            'Error validating query. Please try again.';
+        }
+      }
+
+      // window.onload = function () {
+      //   initializeTableSelector();
+      //   initializeFieldsSelector();
+      //   const mainGroup = new ConditionGroup();
+      //   document.getElementById('mainGroup').appendChild(mainGroup.element);
+      //   mainGroup.addCondition();
+      // };
+    </script>
+  </body>
+</html>

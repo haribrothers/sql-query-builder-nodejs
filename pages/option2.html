@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SQL Query Builder</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>SQL Query Builder</h1>
+
+      <div class="fields-selector">
+        <div class="fields-header">
+          <span>Select Table</span>
+        </div>
+        <div class="table-field" id="tableField">
+          <select
+            id="tableSelect"
+            style="width: 100%"
+            onchange="updatePreview()"
+          >
+            <option value="inquiry">Inquiry</option>
+            <option value="users">Users</option>
+            <option value="status">Status</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="fields-selector">
+        <div class="fields-header">
+          <span>Select Fields to Display</span>
+          <div class="row-actions">
+            <button
+              onclick="selectAllFields(true)"
+              class="icon-button add-btn"
+              title="Select All"
+            >
+              <i class="fas fa-check-double"></i>
+            </button>
+            <button
+              onclick="selectAllFields(false)"
+              class="icon-button remove-btn"
+              title="Deselect All"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="fields-list" id="fieldsList">
+          <!-- Fields will be added here dynamically -->
+        </div>
+      </div>
+
+      <div id="mainGroup" class="condition-group">
+        <div class="fields-header">
+          <span>Enter WHERE Condition:</span>
+        </div>
+        <textarea
+          id="sqlCondition"
+          placeholder="e.g., user_id = 123 AND status = 'active'"
+          oninput="updatePreview()"
+        ></textarea>
+      </div>
+
+      <div class="preview-section">
+        <div class="preview-header">SQL Preview</div>
+        <div id="queryPreview"></div>
+      </div>
+
+      <button
+        onclick="validateQuery()"
+        class="icon-button group-btn"
+        style="width: 200px; margin-top: 20px"
+      >
+        <i class="fas fa-check"></i>&nbsp;Validate SQL
+      </button>
+
+      <div id="result"></div>
+
+    <script type="text/javascript" src="./option2_main.js"></script>
+  </body>
+</html>

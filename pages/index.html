@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Advanced SQL Condition Builder</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2>SQL Condition Builder</h2>
+
+      <div class="fields-selector">
+        <div class="fields-header">
+          <span>Select Table</span>
+        </div>
+        <div class="table-field" id="tableField"></div>
+      </div>
+
+      <div class="fields-selector">
+        <div class="fields-header">
+          <span>Select Fields to Display</span>
+          <div class="row-actions">
+            <button
+              onclick="selectAllFields(true)"
+              class="icon-button add-btn"
+              title="Select All"
+            >
+              <i class="fas fa-check-double"></i>
+            </button>
+            <button
+              onclick="selectAllFields(false)"
+              class="icon-button remove-btn"
+              title="Deselect All"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="fields-list" id="fieldsList">
+          <!-- Fields will be added here dynamically -->
+        </div>
+      </div>
+
+      <div id="mainGroup" class="condition-group"></div>
+      <div class="preview-section">
+        <div class="preview-header">SQL Preview</div>
+        <div id="preview"></div>
+      </div>
+      <button
+        onclick="validateConditions()"
+        class="icon-button group-btn"
+        style="width: 200px; margin-top: 20px"
+      >
+        <i class="fas fa-check"></i>&nbsp;Validate SQL
+      </button>
+      <div id="result"></div>
+    </div>
+
+    <script type="text/javascript" src="./main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SQL Condition Validator</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>SQL Condition Validator</h1>
+      <div class="form-group">
+        <label for="sqlCondition">Enter SQL WHERE Condition:</label>
+        <textarea
+          id="sqlCondition"
+          placeholder="e.g., user_id = 123 AND status = 'active'"
+        ></textarea>
+      </div>
+      <button onclick="validateCondition()">Validate</button>
+      <div id="result"></div>
+
+      <div class="examples">
+        <h3>Example Valid Conditions:</h3>
+        <ul>
+          <li>user_id = 123</li>
+          <li>name LIKE 'John%'</li>
+          <li>age >= 18 AND status = 'active'</li>
+          <li>created_at BETWEEN '2023-01-01' AND '2023-12-31'</li>
+          <li>category IN ('books', 'electronics')</li>
+          <li>description IS NOT NULL</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      async function validateCondition() {
+        const condition = document.getElementById('sqlCondition').value;
+        const resultDiv = document.getElementById('result');
+
+        try {
+          const response = await fetch('/api/validate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ condition }),
+          });
+
+          const result = await response.json();
+
+          if (result.isValid) {
+            resultDiv.className = 'valid';
+            resultDiv.textContent = 'Valid SQL condition! ✅';
+          } else {
+            resultDiv.className = 'invalid';
+            resultDiv.textContent = `Invalid SQL condition: ${result.error} ❌`;
+          }
+        } catch (error) {
+          resultDiv.className = 'invalid';
+          resultDiv.textContent =
+            'Error validating condition. Please try again.';
+        }
+      }
+    </script>
+  </body>
+</html>
