@@ -559,35 +559,76 @@ const mainGroup = new ConditionGroup();
 document.getElementById('mainGroup').appendChild(mainGroup.element);
 mainGroup.addCondition();
 
+function showAlert(message, type = 'success') {
+  // Remove existing alert if any
+  const existingAlert = document.querySelector('.alert');
+  if (existingAlert) {
+    existingAlert.remove();
+  }
+
+  // Create alert element
+  const alert = document.createElement('div');
+  alert.className = `alert alert-${type}`;
+  
+  // Create content
+  const content = document.createElement('div');
+  content.className = 'alert-content';
+  content.textContent = message;
+  
+  // Create close button
+  const closeBtn = document.createElement('div');
+  closeBtn.className = 'alert-close';
+  closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+  
+  // Add elements to alert
+  alert.appendChild(content);
+  alert.appendChild(closeBtn);
+  
+  // Add to document
+  document.body.appendChild(alert);
+  
+  // Handle close button
+  closeBtn.onclick = () => {
+    alert.style.animation = 'slideOut 0.3s ease forwards';
+    setTimeout(() => alert.remove(), 300);
+  };
+  
+  // Auto dismiss after 5 seconds
+  setTimeout(() => {
+    if (alert.parentElement) {
+      alert.style.animation = 'slideOut 0.3s ease forwards';
+      setTimeout(() => alert.remove(), 300);
+    }
+  }, 5000);
+}
+
 async function validateConditions() {
   const tableSelect = document.getElementById('tableSelect');
   const selectedFields = Array.from(
     document.querySelectorAll('.field-item input[type="checkbox"]:checked')
-  ).map((checkbox) => checkbox.value);
+  ).map(checkbox => checkbox.value);
 
   const payload = {
     tableName: tableSelect.value,
     fields: selectedFields,
-    conditions: mainGroup.toJSON(),
+    conditions: mainGroup.toJSON()
   };
 
   try {
     const response = await fetch('/api/validate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
 
     const result = await response.json();
-    const resultDiv = document.getElementById('result');
-
-    resultDiv.className = result.isValid ? 'valid' : 'invalid';
-    resultDiv.textContent = result.isValid
-      ? `Valid SQL Query:\n${result.query}`
-      : `Invalid SQL: ${result.error}`;
+    
+    if (result.isValid) {
+      showAlert(`Valid SQL Query:\n${result.query}`, 'success');
+    } else {
+      showAlert(`Invalid SQL: ${result.error}`, 'error');
+    }
   } catch (error) {
-    document.getElementById('result').className = 'invalid';
-    document.getElementById('result').textContent =
-      'Error validating query. Please try again.';
+    showAlert('Error validating query. Please try again.', 'error');
   }
 }
